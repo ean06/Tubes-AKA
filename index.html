@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kaprekar Constant: Recursive vs Iterative</title>
+    <style>
+        :root {
+            --primary: #2563eb;
+            --bg: #f8fafc;
+            --card: #ffffff;
+            --text: #1e293b;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 2rem;
+        }
+
+        .container {
+            max-width: 900px;
+            width: 100%;
+        }
+
+        .input-section {
+            background: var(--card);
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        input {
+            padding: 0.75rem;
+            font-size: 1.2rem;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            width: 150px;
+            margin-right: 1rem;
+            text-align: center;
+        }
+
+        button {
+            padding: 0.75rem 1.5rem;
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        button:hover { background-color: #1d4ed8; }
+
+        .comparison-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+        }
+
+        .card {
+            background: var(--card);
+            padding: 1.5rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+            border-top: 5px solid var(--primary);
+        }
+
+        .card.iterative { border-top-color: #059669; }
+
+        h2 { margin-top: 0; font-size: 1.25rem; color: #475569; }
+
+        .stats {
+            background: #f1f5f9;
+            padding: 0.5rem;
+            border-radius: 6px;
+            font-family: monospace;
+            margin-bottom: 1rem;
+            font-size: 0.9rem;
+            color: #ef4444;
+            font-weight: bold;
+        }
+
+        .output-log {
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.85rem;
+            white-space: pre-wrap;
+            height: 300px;
+            overflow-y: auto;
+            background: #0f172a;
+            color: #38bdf8;
+            padding: 1rem;
+            border-radius: 8px;
+        }
+
+        .error { color: #ef4444; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <div class="input-section">
+            <h1>Kaprekar</h1>
+            <p>Membandingkan performa rekursif vs iteratif dengan menjalankan proses 1000 kali</p>
+            <input type="number" id="numInput" placeholder="Contoh: 1234" max="9999">
+            <button onclick="runProcess()">Proses Perbandingan</button>
+            <div id="errorMsg" class="error" style="margin-top: 10px;"></div>
+        </div>
+
+        <div class="comparison-grid">
+            <div class="card">
+                <h2>Metode Rekursif</h2>
+                <div id="recStats" class="stats">Waktu (1000x run): -</div>
+                <div id="recLog" class="output-log">Menunggu input...</div>
+            </div>
+
+            <div class="card iterative">
+                <h2>Metode Iteratif</h2>
+                <div id="iterStats" class="stats">Waktu (1000x run): -</div>
+                <div id="iterLog" class="output-log">Menunggu input...</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- LOGIKA ASLI TETAP SAMA ---
+        function dsc(num) {
+            let d1 = Math.floor(num / 1000);
+            let d2 = Math.floor(num / 100) % 10;
+            let d3 = Math.floor(num / 10) % 10;
+            let d4 = num % 10;
+            if (d1 < d2) [d1, d2] = [d2, d1];
+            if (d1 < d3) [d1, d3] = [d3, d1];
+            if (d1 < d4) [d1, d4] = [d4, d1];
+            if (d2 < d3) [d2, d3] = [d3, d2];
+            if (d2 < d4) [d2, d4] = [d4, d2];
+            if (d3 < d4) [d3, d4] = [d4, d3];
+            return d1 * 1000 + d2 * 100 + d3 * 10 + d4;
+        }
+
+        function asc(num) {
+            let d1 = Math.floor(num / 1000);
+            let d2 = Math.floor(num / 100) % 10;
+            let d3 = Math.floor(num / 10) % 10;
+            let d4 = num % 10;
+            if (d1 > d2) [d1, d2] = [d2, d1];
+            if (d1 > d3) [d1, d3] = [d3, d1];
+            if (d1 > d4) [d1, d4] = [d4, d1];
+            if (d2 > d3) [d2, d3] = [d3, d2];
+            if (d2 > d4) [d2, d4] = [d4, d2];
+            if (d3 > d4) [d3, d4] = [d4, d3];
+            return d1 * 1000 + d2 * 100 + d3 * 10 + d4;
+        }
+
+        function validasiInput(num) {
+            if (num < 0 || num > 9999) return false;
+            let d1 = Math.floor(num / 1000);
+            let d2 = Math.floor(num / 100) % 10;
+            let d3 = Math.floor(num / 10) % 10;
+            let d4 = num % 10;
+            if (d1 === d2 && d2 === d3 && d3 === d4) return false;
+            return true;
+        }
+
+        let recOutput = "";
+        function kaprekarRecursive(currentNum, step, logEnabled) {
+            if (currentNum === 6174) return step;
+            let aNum = asc(currentNum);
+            let dNum = dsc(currentNum);
+            let result = dNum - aNum;
+            if (logEnabled) {
+                let aStr = aNum < 1000 ? "0" + aNum : aNum;
+                recOutput += `Langkah ${step + 1} : ${dNum} - ${aStr} = ${result}\n`;
+            }
+            return kaprekarRecursive(result, step + 1, logEnabled);
+        }
+
+        function runProcess() {
+            const input = parseInt(document.getElementById('numInput').value);
+            const errorDiv = document.getElementById('errorMsg');
+            if (isNaN(input) || !validasiInput(input)) {
+                errorDiv.innerText = "Error: Input tidak valid!";
+                return;
+            }
+            errorDiv.innerText = "";
+
+            // --- EKSEKUSI REKURSIF (1000 KALI) ---
+            recOutput = "";
+            let stepRec = 0;
+            const t0 = performance.now();
+            for (let i = 0; i < 1000; i++) {
+                if (input === 6174) {
+                    if(i === 0) recOutput = "Angka sudah konstanta Kaprekar.";
+                } else {
+                    // Hanya catat log pada iterasi loop pertama agar tidak memenuhi memori
+                    stepRec = kaprekarRecursive(input, 0, i === 0);
+                }
+            }
+            const t1 = performance.now();
+            document.getElementById('recLog').innerText = recOutput + `\nTotal: ${stepRec} iterasi per run.`;
+            document.getElementById('recStats').innerText = `Waktu (1000x): ${(t1 - t0).toFixed(4)} ms`;
+
+            // --- EKSEKUSI ITERATIF (1000 KALI) ---
+            let iterLog = "";
+            let iterasiFinal = 0;
+            const t2 = performance.now();
+            for (let i = 0; i < 1000; i++) {
+                let iterasi = 0;
+                let temp = input;
+                let result = 0;
+                if (input === 6174) {
+                    if(i === 0) iterLog = "Angka sudah konstanta Kaprekar.";
+                } else {
+                    while (result !== 6174) {
+                        let aNum = asc(temp);
+                        let dNum = dsc(temp);
+                        result = dNum - aNum;
+                        if (i === 0) { // Catat log hanya di run pertama
+                            let aStr = aNum < 1000 ? "0" + aNum : aNum;
+                            iterLog += `Langkah ${iterasi + 1} : ${dNum} - ${aStr} = ${result}\n`;
+                        }
+                        temp = result;
+                        iterasi++;
+                    }
+                }
+                iterasiFinal = iterasi;
+            }
+            const t3 = performance.now();
+            document.getElementById('iterLog').innerText = iterLog + `\nTotal: ${iterasiFinal} iterasi per run.`;
+            document.getElementById('iterStats').innerText = `Waktu (1000x): ${(t3 - t2).toFixed(4)} ms`;
+        }
+    </script>
+</body>
+</html>
